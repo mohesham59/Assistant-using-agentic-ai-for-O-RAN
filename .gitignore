@@ -1,0 +1,75 @@
+# ====================
+# Python bytecode
+# ====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+
+# ====================
+# Virtual environments
+# ====================
+env/
+venv/
+env.bak/
+venv.bak/
+.Python
+
+# ====================
+# Build artifacts
+# ====================
+build/
+dist/
+develop-eggs/
+eggs/
+parts/
+sdist/
+.installed.cfg
+
+# ====================
+# Logs and databases
+# ====================
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+
+# ====================
+# Editor & IDE files
+# ====================
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ====================
+# OS-specific files
+# ====================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# ====================
+# Environment variables
+# ====================
+.env
+
+# ====================
+# Output and temporary files
+# ====================
+*.out
+*.tmp
+output/
+embeddings/
+report.pdf
+
+# ====================
+# Project-specific exclusions
+# ====================
+data/*.pdf             # Ignore all PDFs in data folder...
+!data/guidelines.pdf   # ...except guidelines.pdf
+!data/graduation_book  # ...and graduation_book
+!data/O-RAN.WG3.E2SM-KPM-R003-v03.00
+!data/O-RAN.WG3.E2SM-RC-v01.02

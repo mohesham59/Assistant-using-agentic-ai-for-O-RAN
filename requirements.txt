@@ -1,0 +1,11 @@
+llama_index==0.12.45
+llama_index_vector_stores_chroma
+llama_index_readers_web
+chromadb
+fastapi
+uvicorn
+python-dotenv
+pypandoc
+openai
+validators
+nltk

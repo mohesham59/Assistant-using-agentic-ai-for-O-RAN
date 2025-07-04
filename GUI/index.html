@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistant using agentic AI for O-RAN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold text-center mb-6">
+        Assistant using agentic AI for O-RAN
+      </h1>
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <label for="userInput" class="block text-lg font-medium mb-2"
+          >Enter your prompt:</label
+        >
+        <textarea
+          id="userInput"
+          class="w-full p-2 border rounded-md mb-4"
+          rows="5"
+          placeholder="e.g., What is RAN PM components"
+        ></textarea>
+        <label for="vectorStoreType" class="block text-lg font-medium mb-2"
+          >Select Vector Store:</label
+        >
+        <select
+          id="vectorStoreType"
+          name="vectorStoreType"
+          class="w-full p-2 border rounded-md mb-4"
+        >
+          <option value="chroma">Chroma</option>
+          <option value="llamaindex">LlamaIndex</option>
+        </select>
+        <button
+          id="generateBtn"
+          class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+        >
+          Generate Report
+        </button>
+        <div id="loading" class="hidden mt-4 text-gray-500">
+          Processing... Please wait.
+        </div>
+        <div id="result" class="mt-4 hidden">
+          <h2 class="text-xl font-semibold mb-2">Output</h2>
+          <div id="tableOutput" class="prose max-w-none"></div>
+          <a
+            id="downloadLink"
+            class="mt-4 inline-block bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 hidden"
+            href="/static/report.pdf"
+            download
+            >Download Full PDF Report</a
+          >
+          <div id="downloadStatus" class="mt-2 text-green-600 hidden"></div>
+        </div>
+        <div id="error" class="mt-4 text-red-500 hidden"></div>
+      </div>
+    </div>
+
+    <script>
+      function renderMarkdown(markdown) {
+        if (!markdown || markdown.trim() === "") {
+          return "<p>No summary available. Please try again or check the full report.</p>";
+        }
+        return marked.parse(markdown);
+      }
+
+      document
+        .getElementById("generateBtn")
+        .addEventListener("click", async (e) => {
+          e.preventDefault(); // Prevent any default form submission
+          const userInput = document.getElementById("userInput").value.trim();
+          const vectorStoreType =
+            document.getElementById("vectorStoreType").value;
+          const generateBtn = document.getElementById("generateBtn");
+          const outputDiv = document.getElementById("tableOutput");
+          const downloadLink = document.getElementById("downloadLink");
+          const loadingMessage = document.getElementById("loading");
+          const resultDiv = document.getElementById("result");
+          const errorDiv = document.getElementById("error");
+
+          if (!userInput) {
+            alert("Please enter a prompt!");
+            return;
+          }
+
+          // Disable button and show loading
+          generateBtn.disabled = true;
+          generateBtn.classList.add("bg-gray-400", "cursor-not-allowed");
+          generateBtn.classList.remove("bg-blue-500", "hover:bg-blue-600");
+          loadingMessage.classList.remove("hidden");
+          resultDiv.classList.add("hidden");
+          errorDiv.classList.add("hidden");
+          downloadLink.classList.add("hidden");
+          document.getElementById("downloadStatus").classList.add("hidden");
+
+          try {
+            const response = await fetch("http://localhost:8000/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prompt: userInput, vectorStoreType }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            loadingMessage.classList.add("hidden");
+
+            // Display the output in the output div
+            outputDiv.innerHTML = renderMarkdown(data.report); // Use full report for display
+            resultDiv.classList.remove("hidden");
+
+            // Show the download link
+            const pdfUrl = data.pdf_url && data.pdf_url.startsWith("http") ? data.pdf_url : "http://localhost:8000/static/report.pdf";
+            downloadLink.href = pdfUrl;
+            downloadLink.classList.remove("hidden"); // Show the download button
+          } catch (err) {
+            console.error("Error:", err);
+            errorDiv.textContent = `Failed to generate report: ${err.message}`;
+            errorDiv.classList.remove("hidden");
+          } finally {
+            // Re-enable button
+            generateBtn.disabled = false;
+            generateBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
+            generateBtn.classList.add("bg-blue-500", "hover:bg-blue-600");
+            loadingMessage.classList.add("hidden");
+          }
+        });
+
+      document
+        .getElementById("downloadLink")
+        .addEventListener("click", async (e) => {
+          e.preventDefault(); // Prevent default link behavior
+          const downloadLink = document.getElementById("downloadLink");
+          const downloadStatus = document.getElementById("downloadStatus");
+          const pdfUrl = downloadLink.href && downloadLink.href.startsWith("http") ? downloadLink.href : "http://localhost:8000/static/report.pdf";
+
+          if (!pdfUrl || pdfUrl === "#") {
+            downloadStatus.textContent = "PDF not available yet.";
+            downloadStatus.classList.remove("hidden");
+            return;
+          }
+
+          // Add a delay to ensure the PDF file is fully written
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          try {
+            const tempLink = document.createElement("a");
+            tempLink.href = pdfUrl;
+            tempLink.download = "report.pdf";
+            tempLink.style.display = "none"; // Ensure the link is not visible
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            // Show success message and reset form
+            downloadStatus.textContent =
+              "Download complete and ready! You can enter a new prompt.";
+            downloadStatus.classList.remove("hidden");
+            document.getElementById("userInput").value = "";
+            document.getElementById("userInput").focus();
+            document.getElementById("result").classList.add("hidden");
+            downloadLink.classList.add("hidden");
+          } catch (err) {
+            console.error("Download error:", err);
+            downloadStatus.textContent = `Failed to download PDF: ${err.message}`;
+            downloadStatus.classList.remove("hidden");
+          }
+        });
+    </script>
+  </body>
+</html>
