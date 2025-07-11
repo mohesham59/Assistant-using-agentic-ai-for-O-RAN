@@ -116,7 +116,6 @@ Assistant-using-agentic-ai-for-O-RAN/
    - The script prints the report and generates `report.pdf` in the project root.
 
 ### Option 2: Web Interface
-![Screenshot 2025-07-05 011416](https://github.com/user-attachments/assets/14f8fac7-ebda-4651-baea-2beb22b1fd82)
 
 1. **Run the Backend**:
    Start the FastAPI server:
