@@ -19,17 +19,18 @@ from tools.report_generator import generate_report
 import config
 import llama_index.core
 
-# Setup Logging
+# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# تسجيل إصدار llama-index
+# Log current llama-index version
 logger.info(f"Llama-index version: {llama_index.core.__version__}")
 
-# Load indexes directly from Chroma or LlamaIndex based on user choice
+# Load indexes either from persistent Chroma DB or in-memory using LlamaIndex
 def load_indexes(vector_store_type):
     try:
         if vector_store_type == "chroma":
+            # Load vector indexes from Chroma
             guidelines_index = load_guidelines_index("data", "guidelines")
             web_index = load_web_index("https://docs.o-ran-sc.org/projects/o-ran-sc-nonrtric/en/latest/overview.html#nonrtric-components", "web")
         else:
@@ -48,7 +49,7 @@ def load_indexes(vector_store_type):
         logger.error(f"[!] Error loading indexes: {str(e)}", exc_info=True)
         raise
 
-# Create retriever and query engine for each index
+# Initialize retrievers and query engines
 def create_query_engines(guidelines_index, web_index):
     guidelines_retriever = VectorIndexRetriever(index=guidelines_index, similarity_top_k=5)
     web_retriever = VectorIndexRetriever(index=web_index, similarity_top_k=5)
@@ -58,10 +59,10 @@ def create_query_engines(guidelines_index, web_index):
     
     return guidelines_query_engine, web_query_engine
 
-# Default URL
+# Default URL used for web document index
 DEFAULT_URL = "https://docs.o-ran-sc.org/projects/o-ran-sc-nonrtric/en/latest/overview.html#nonrtric-components"
 
-# Prompt Template لاسترجاع معلومات مباشرة
+# Prompt used to generate factual Markdown responses from retrieved data
 report_prompt = PromptTemplate(
     """
     You are an expert assistant with access to guidelines documents (PDFs in the data directory) and web data. Based on the user input, retrieve and provide a clear, concise, and accurate description or explanation of the requested topic from the available data. The output should be in Markdown format and include:
@@ -82,12 +83,13 @@ report_prompt = PromptTemplate(
     """
 )
 
+# Initialize FastAPI app
 app = FastAPI()
 
-# Mount static files from the root directory for serving report.pdf
+# Serve static files (for downloading report.pdf)
 app.mount("/static", StaticFiles(directory="."), name="static")
 
-# Enable CORS
+# Enable CORS for frontend compatibility
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -96,15 +98,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve index.html at the root
+# Serve the frontend HTML page
 @app.get("/")
 async def serve_index():
     return FileResponse("index.html")
 
+# Define the input schema
 class PromptRequest(BaseModel):
     prompt: str
-    vectorStoreType: str  # New field for vector store type
+    vectorStoreType: str # User can choose between 'chroma' or 'llamaindex'
 
+# Format the Markdown response with sources
 def format_response(response, sources):
     """
     Format the response in Markdown with source information.
@@ -117,6 +121,7 @@ def format_response(response, sources):
         markdown_content += "- No specific sources identified.\n"
     return markdown_content
 
+# Main endpoint for generating the report
 @app.post("/generate")
 async def generate_report_endpoint(request: PromptRequest):
     user_input = request.prompt
