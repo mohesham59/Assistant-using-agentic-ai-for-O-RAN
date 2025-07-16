@@ -9,14 +9,14 @@ from tools.report_generator import generate_report
 import config
 import logging
 
-# Setup Logging
+# Setup logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# تحميل الـ .env
+# Load environment variables from .env file
 load_dotenv()
 
-# Prompt Template لتوليد تقرير شامل
+# Prompt template to generate a detailed optimization report
 report_prompt = PromptTemplate(
     """
     You are an expert content optimizer with access to a guidelines document and web data. Based on the user input and all available data from the provided tools (guidelines_engine and web_reader_engine), generate a comprehensive Content Optimization Report in Markdown format. The report should be as detailed as possible, with no limit on length, and include:
@@ -52,7 +52,7 @@ report_prompt = PromptTemplate(
     """
 )
 
-# إعداد الـ Agent
+# Initialize the ReAct Agent with available tools and LLM
 agent = ReActAgent.from_tools(
     tools=[
         guidelines_engine,
@@ -63,15 +63,16 @@ agent = ReActAgent.from_tools(
     verbose=True
 )
 
+# Main interaction loop
 while True:
     user_input = input("You: ")
     if user_input.lower() == "quit":
         break
     try:
-        # استخدام الـ prompt المخصص لتوليد التقرير
+        # Generate the report using the custom prompt
         response = agent.chat(report_prompt.format(user_input=user_input))
         logger.info(f"Agent response: {str(response)[:100]}...")
-        # حفظ التقرير كـ PDF
+        # Save the generated report as a PDF
         report_result = generate_report(str(response), "report.pdf")
         logger.info(f"Report generation result: {report_result}")
         print("Agent: ", response)
