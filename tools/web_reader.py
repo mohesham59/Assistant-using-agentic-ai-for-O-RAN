@@ -10,26 +10,27 @@ from llama_index.core import Settings
 import chromadb
 import config
 
-# إعداد Logging
+# Configure logging for consistent debug output
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 def load_index(url: str = None, index_name: str = "web", use_chroma=True):
+    # Set a default URL if none is provided
     if not url:
         url = "https://docs.o-ran-sc.org/projects/o-ran-sc-nonrtric/en/latest/overview.html#nonrtric-components"
     
-    # التحقق من صحة الرابط
+    # Validate the provided URL
     if not validators.url(url):
         logger.error(f"[!] Invalid URL: {url}")
         raise ValueError(f"Invalid URL: {url}")
 
-    # فحص إعدادات الـ embedding
+    # Ensure the embedding model is initialized
     if not Settings.embed_model:
         logger.error("[!] Embedding model not initialized")
         raise ValueError("Embedding model not initialized")
 
     try:
-        # Load webpage content
+        # Load and parse the webpage into documents
         documents = SimpleWebPageReader(html_to_text=True).load_data([url])
         logger.info(f"Loaded {len(documents)} documents from {url}")
 
