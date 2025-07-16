@@ -4,22 +4,22 @@ import logging
 import tempfile
 import shutil
 
-# إعداد Logging
+# Configure logging for consistent output
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 def generate_report(markdown_content, output_file="report.pdf"):
     try:
-        # التحقق من توفر pandoc
+        # Check if pandoc is available
         version = pypandoc.get_pandoc_version()
         logger.info(f"[✔] Pandoc version {version} detected.")
 
-        # التحقق من توفر pdflatex
+        # Check if pdflatex is available in the system path
         if not shutil.which("pdflatex"):
             logger.error("[!] pdflatex not found. Please install TeX Live or a similar LaTeX distribution.")
             return "[!] pdflatex not found. Please install TeX Live."
 
-        # إنشاء قالب LaTeX يدعم العربية
+        # Define a LaTeX template that supports Arabic and English content
         latex_template = r"""
         \documentclass[a4paper,11pt]{article}
         \usepackage{booktabs}
@@ -39,13 +39,13 @@ def generate_report(markdown_content, output_file="report.pdf"):
         \end{document}
         """
 
-        # تحويل الـ Markdown إلى ملف مؤقت
+        # Write the Markdown content to a temporary file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as temp_md_file:
             temp_md_file.write(markdown_content)
             temp_md_path = temp_md_file.name
             logger.info(f"Temporary Markdown file created at: {temp_md_path}")
 
-        # تحويل الـ Markdown إلى PDF
+        # Convert the Markdown file to PDF using Pandoc with pdflatex
         pypandoc.convert_file(
             temp_md_path,
             "pdf",
@@ -60,11 +60,11 @@ def generate_report(markdown_content, output_file="report.pdf"):
             ]
         )
 
-        # حذف الملف المؤقت
+        # Remove the temporary Markdown file
         os.unlink(temp_md_path)
         logger.info(f"Temporary Markdown file deleted: {temp_md_path}")
 
-        # التحقق من وجود ملف PDF
+        # Check that the PDF file was successfully created
         if not os.path.exists(output_file):
             logger.error(f"[!] PDF file not found at {output_file} after generation.")
             return f"[!] PDF file not found at {output_file}."
