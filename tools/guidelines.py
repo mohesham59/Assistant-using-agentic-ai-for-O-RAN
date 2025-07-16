@@ -7,34 +7,34 @@ from llama_index.core import Settings
 import chromadb
 import config
 
-# إعداد Logging
+# Set up logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 def load_index(data_dir, index_name, use_chroma=True):
-    # فحص وجود المجلد
+    # Check if the data directory exists
     if not os.path.isdir(data_dir):
         logger.error(f"[!] Data directory not found: {data_dir}")
         raise FileNotFoundError(f"Data directory not found: {data_dir}")
 
-    # فحص وجود ملفات PDF في المجلد
+    # Check if the directory contains PDF files
     pdf_files = [f for f in os.listdir(data_dir) if f.endswith('.pdf')]
     if not pdf_files:
         logger.error(f"[!] No PDF files found in directory: {data_dir}")
         raise FileNotFoundError(f"No PDF files found in directory: {data_dir}")
 
-    # فحص إعدادات الـ embedding
+    # Ensure the embedding model is initialized
     if not Settings.embed_model:
         logger.error("[!] Embedding model not initialized")
         raise ValueError("Embedding model not initialized")
 
-    # فحص إعدادات الـ LLM
+    # Ensure the LLM model is initialized
     if not Settings.llm:
         logger.error("[!] LLM not initialized")
         raise ValueError("LLM not initialized")
 
     try:
-        # Load all PDF documents from the directory
+        # Load all PDF documents from the specified directory
         documents = SimpleDirectoryReader(input_dir=data_dir, required_exts=['.pdf']).load_data()
         logger.info(f"Loaded {len(documents)} documents from {data_dir} (files: {', '.join(pdf_files)})")
 
@@ -67,7 +67,7 @@ def asQueryEngineTool(index):
         logger.error("[!] Index is None")
         raise ValueError("Index cannot be None")
     
-    # فحص إعدادات الـ LLM
+    # Ensure the LLM model is initialized
     if not Settings.llm:
         logger.error("[!] LLM not initialized")
         raise ValueError("LLM not initialized")
