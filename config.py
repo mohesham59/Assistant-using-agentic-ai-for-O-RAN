@@ -6,25 +6,26 @@ from llama_index.llms.groq import Groq
 from openai import OpenAI
 import logging
 
-# إعداد Logging
+# Setup logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# تحميل الـ .env
+# Load environment variables from .env file
 load_dotenv()
 
-# إعداد Groq API
+# Retrieve Groq API key
 groq_api_key = os.getenv("GroqCloud_API_TOKEN")
 if not groq_api_key:
     logger.error("[!] Groq API Key not found in .env file")
     raise ValueError("Please set GroqCloud_API_TOKEN in .env file")
 
+# Initialize Groq OpenAI-compatible client
 client = OpenAI(
     api_key=groq_api_key,
     base_url="https://api.groq.com/openai/v1"
 )
 
-# فحص الاتصال بـ Groq
+# Test Groq API connection
 try:
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -36,7 +37,7 @@ except Exception as e:
     logger.error(f"[!] Error connecting to Groq API: {str(e)}")
     exit(1)
 
-# إعداد نموذج الـ embedding باستخدام HuggingFace
+# Initialize embedding model using HuggingFace
 try:
     Settings.embed_model = HuggingFaceEmbedding(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
@@ -46,7 +47,7 @@ except Exception as e:
     logger.error(f"[!] Error initializing embedding model: {str(e)}")
     raise
 
-# إعداد Groq LLM
+# Initialize Groq LLM
 try:
     Settings.llm = Groq(
         api_key=groq_api_key,
@@ -57,10 +58,12 @@ try:
 except Exception as e:
     logger.error(f"[!] Error initializing Groq LLM: {str(e)}. Falling back to Ollama.")
     from llama_index.llms.ollama import Ollama
+    
+    # Fallback to local LLM via Ollama if Groq fails
     Settings.llm = Ollama(model="mistral:instruct", request_timeout=360.0, base_url="http://127.0.0.1:11434")
 
-# إعداد Chroma Vector Store
+# Define path for Chroma vector store
 CHROMA_DB_PATH = "./chroma_db"
 
-# Export client for use in other modules
+# Export the client for use in other modules
 Settings.llm_client = client
