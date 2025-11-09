@@ -1,5 +1,6 @@
 # Assistant-using-agentic-ai-for-O-RAN
 
+## Overview
 The Assistant-using-agentic-ai-for-O-RAN is a Python-based web application designed to analyze and optimize content related to O-RAN (Open Radio Access Network) using Retrieval-Augmented Generation (RAG). It leverages the `llama_index` library and integrates with local (`Ollama` with `mistral:instruct`) and cloud-based (`Groq` with `llama-3.3-70b-versatile`) language models to process content from a specified webpage (`https://docs.o-ran-sc.org/projects/o-ran-sc-nonrtric/en/latest/overview.html#nonrtric-components`) and data files including `graduation_book`, `O-RAN.WG3.E2SM-KPM-R003-v03.00`, and `O-RAN.WG3.E2SM-RC-v01.02` located in the `data/` folder. The tool generates a concise summary (100-150 words) displayed in the GUI's **Recommendations** section and a detailed PDF report (`report.pdf`) with comprehensive analysis and recommendations, adhering to content quality principles like E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness).
 
 ## Features
